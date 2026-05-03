@@ -1,27 +1,59 @@
-let mediaRecorder;
-let audioChunks = [];
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tallennin</title>
+    <style>
+        body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; gap: 20px; }
+        button { padding: 20px 40px; font-size: 1.2rem; cursor: pointer; border: none; border-radius: 10px; color: white; width: 80%; max-width: 300px; }
+        #start { background-color: #ff4444; }
+        #stop { background-color: #666666; }
+    </style>
+</head>
+<body>
 
-async function startRecording() {
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    mediaRecorder = new MediaRecorder(stream);
-    
-    mediaRecorder.ondataavailable = (event) => {
-        audioChunks.push(event.data);
-    };
+    <button id="start" onclick="startRecording()">🔴 ALOITA ÄÄNITYS</button>
+    <button id="stop" onclick="stopRecording()" disabled>TALLENNA TIEDOSTO</button>
 
-    mediaRecorder.onstop = () => {
-        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-        const audioUrl = URL.createObjectURL(audioBlob);
-        const link = document.createElement('a');
-        link.href = audioUrl;
-        link.download = `todiste_${new Date().toISOString()}.webm`;
-        link.click();
-        audioChunks = [];
-    };
+    <script>
+        let mediaRecorder;
+        let audioChunks = [];
 
-    mediaRecorder.start();
-}
+        async function startRecording() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream);
+                audioChunks = [];
 
-function stopRecording() {
-    mediaRecorder.stop();
-}
+                mediaRecorder.ondataavailable = (event) => {
+                    audioChunks.push(event.data);
+                };
+
+                mediaRecorder.onstop = () => {
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                    const audioUrl = URL.createObjectURL(audioBlob);
+                    const link = document.createElement('a');
+                    link.href = audioUrl;
+                    link.download = `todiste_${new Date().getTime()}.webm`;
+                    link.click();
+                };
+
+                mediaRecorder.start();
+                document.getElementById('start').disabled = true;
+                document.getElementById('stop').disabled = false;
+                document.getElementById('start').innerText = "ÄÄNITTÄÄ...";
+            } catch (err) {
+                alert("Mikrofonia ei voitu käyttää. Tarkista luvat!");
+            }
+        }
+
+        function stopRecording() {
+            mediaRecorder.stop();
+            document.getElementById('start').disabled = false;
+            document.getElementById('stop').disabled = true;
+            document.getElementById('start').innerText = "🔴 ALOITA ÄÄNITYS";
+        }
+    </script>
+</body>
+</html>
